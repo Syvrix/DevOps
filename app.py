@@ -102,6 +102,8 @@ def users():
         color = data.get("favorite_color")
         age = data.get("age")
         if name and color:
+            if exists_usr_name(data["name"]):
+                return ("Duplicate username found, please enter a unique username"), 409
             new_user = {
                 "id": int(unique_usr_id(user_list)),
                 "name": name,
@@ -113,23 +115,19 @@ def users():
 
 @app.route("/users/<user_id>", methods=["PUT", "GET", "DELETE"])
 def user_id_mgmt(user_id):
-    data = request.json
     if request.method == "PUT":
-        usrfnd=exists_usr_id(int(user_id))
-        if usrfnd:
-            v_name=data.get("name")
-            v_age=data.get("age")
-            if not v_name and not v_age:
-                return "You need to provide name or age, or both."
-            if v_name:
-                usrfnd.update({"name": v_name})
-            if v_age:
-                usrfnd.update({"age": v_age})
-            if v_age or v_name:
-                user_list.append()
-            return user_list
+        data = request.json
+        for user in user_list:
+            if user["id"]==int(user_id):
+                if "name" in data:
+                    if exists_usr_name(data["name"]):
+                        return ("Duplicate username found, please enter a unique username"), 409
+                    user["name"]=data["name"]
+                if "age" in data:
+                    user["age"]=data["age"]
+                return user_list
         else:
-            return f"String was returned empty {usrfnd}, user ID provided: {user_id}"
+            return f"String was returned empty, user ID provided: {user_id}"
     if request.method == "GET":
         for i in user_list:
             if i["id"]==int(user_id):
@@ -139,9 +137,7 @@ def user_id_mgmt(user_id):
         usrfnd=exists_usr_id(int(user_id))
         if usrfnd:
             x=user_list.remove(usrfnd)
-            if x:
+            if x is None:
                 return ("User has been succesfull deleted")
-            else:
-                return ("failed removing user")
         else:
             return "No such users exists."
