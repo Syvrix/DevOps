@@ -1,143 +1,20 @@
 ## Import flask
-from flask import Flask, request  # type: ignore
+from flask import Flask, request, render_template  # type: ignore
 
 app = Flask(__name__)
 
 
 ## Basic Routes
 @app.route('/')
-def hello():
-    return ("Hello world")
+def Home():
+    return render_template("Home.html", title="Min hemsida")
 
+@app.route('/submit', methods=["POST"])
+def submit():
+    email=request.form["email"]
+    print(email)
+    return "Email has been submitted, you will be contacted"
 
-@app.route("/welcome")
-def welcome():
-    return ("Welcome to the API!")
-
-
-@app.route("/goodbye")
-def goodbye():
-    return ("Goodbye from the API!")
-
-
-# 2. GET and POST REQUESTS
-@app.route("/info", methods=["GET"])
-def info():
-    return ("Send a POST request with your name and age.")
-
-
-@app.route("/submit", methods=["POST"])
-def handle_submit():
-    data = request.json
-    title = data.get("title")
-    year = data.get("year")
-    if not title or not year:
-        return {"Error": "Title and year are required"}, 400
-    else:
-        return {"Message": f"The book is, {title} and was published year {year}"}
-
-
-## 2. Handle different HTTP Methods
-@app.route("/data", methods=["POST"])
-def handle_data():
-    data = request.json  # type: ignore
-    return {
-        "message": "Data Recieved succesfully",
-        "data": data,
-    }
-
-
-## 3. Dynamic route parameter parsing
-@app.route("/greet/<username>", methods=["POST", "GET"])
-def greet_user(username):
-    age = request.args.get("age")
-    if username and username.isalpha():
-        if request.method == 'POST':
-            if age:
-                return {"Message": f"Hello, {username} You are {age} years old!"}
-            else:
-                return {"Message": f"Hello, {username}"}
-        if request.method == "GET":
-            return (f"Hello {username}!")
-    else:
-        return {"error": "Invalid username."}, 400
-
-
-## 4. CRUD Operations Simulation
-# users_list_format={
-#     "id": int,
-#     "name": str,
-#     "favorite_color": str
-#     }
-List_example_one = {"id": 1, "name": "sarah","age": 23, "favorite_color": "red"}
-List_example_two = {"id": 2, "name": "Marc","age": 18, "favorite_color": "blue"}
-user_list = []
-user_list.append(List_example_one)
-user_list.append(List_example_two)
-
-def exists_usr_name(name):
-    for i in user_list:
-        if i["name"]==name: # if Username exists, return True
-            return True
-        else:
-            return False
-def exists_usr_id(id):
-    for i in user_list:
-        if i["id"]==id: # if user id exists, return True
-            return i
-
-def unique_usr_id(list):
-    id = max(i["id"] for i in list)
-    return (id + 1)
-
-
-@app.route("/users", methods=["POST", "GET"])
-def users():
-    if request.method == 'GET':
-        return (user_list)
-    elif request.method == "POST":
-        data = request.json
-        # id=data.get("id")
-        name = data.get("name")
-        color = data.get("favorite_color")
-        age = data.get("age")
-        if name and color:
-            if exists_usr_name(data["name"]):
-                return ("Duplicate username found, please enter a unique username"), 409
-            new_user = {
-                "id": int(unique_usr_id(user_list)),
-                "name": name,
-                "favorite_color": color,
-                "age": age
-            }
-        user_list.append(new_user)
-        return user_list
-
-@app.route("/users/<user_id>", methods=["PUT", "GET", "DELETE"])
-def user_id_mgmt(user_id):
-    if request.method == "PUT":
-        data = request.json
-        for user in user_list:
-            if user["id"]==int(user_id):
-                if "name" in data:
-                    if exists_usr_name(data["name"]):
-                        return ("Duplicate username found, please enter a unique username"), 409
-                    user["name"]=data["name"]
-                if "age" in data:
-                    user["age"]=data["age"]
-                return user_list
-        else:
-            return f"String was returned empty, user ID provided: {user_id}"
-    if request.method == "GET":
-        for i in user_list:
-            if i["id"]==int(user_id):
-                return f"Found user {i}"
-        return f"No user exists with the id {user_id}"
-    if request.method == "DELETE":
-        usrfnd=exists_usr_id(int(user_id))
-        if usrfnd:
-            x=user_list.remove(usrfnd)
-            if x is None:
-                return ("User has been succesfull deleted")
-        else:
-            return "No such users exists."
+## display debugg data to the console.
+if __name__ == "__main__":
+    app.run(debug=True)
